@@ -1,4 +1,4 @@
-import { Action, ActionPanel, closeMainWindow, Cache, List, popToRoot, showToast, Toast } from "@raycast/api";
+import { Action, ActionPanel, closeMainWindow, List, popToRoot, showToast, Toast } from "@raycast/api";
 import { getItems, getCode, Item } from "./totp";
 
 const getAllItems = () => {
@@ -15,12 +15,8 @@ const getAllItems = () => {
   }
 };
 
-const cache = new Cache();
-cache.set("items", JSON.stringify(getAllItems()));
-
 export default function Command() {
-  const cached = cache.get("items");
-  const items: Item[] = cached ? JSON.parse(cached) : [];
+  const items: Item[] = getAllItems();
 
   return (
     <List searchBarPlaceholder="Open iTerm Profile">
