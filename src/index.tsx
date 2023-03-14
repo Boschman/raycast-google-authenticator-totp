@@ -19,7 +19,7 @@ export default function Command() {
   const items: Item[] = getAllItems();
 
   return (
-    <List searchBarPlaceholder="Open iTerm Profile">
+    <List searchBarPlaceholder="Paste One-Time Password">
       {items?.map((item, index) => (
         <List.Item
           icon="2fa-icon.png"
