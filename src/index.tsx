@@ -1,4 +1,4 @@
-import { Action, ActionPanel, closeMainWindow, List, popToRoot, showToast, Toast } from "@raycast/api";
+import { Action, ActionPanel, Clipboard, closeMainWindow, Icon, List, popToRoot, showToast, Toast } from "@raycast/api";
 import { getItems, getCode, Item } from "./totp";
 
 const getAllItems = () => {
@@ -15,6 +15,22 @@ const getAllItems = () => {
   }
 };
 
+// Codes expire, so generate on demand rather than at render time
+const pasteCode = async (item: Item) => {
+  try {
+    await Clipboard.paste(await getCode(item.secret));
+    await closeMainWindow();
+    await popToRoot();
+  } catch (e: unknown) {
+    const err = e as Error;
+    await showToast({
+      style: Toast.Style.Failure,
+      title: "Error generating code",
+      message: err.message,
+    });
+  }
+};
+
 export default function Command() {
   const items: Item[] = getAllItems();
 
@@ -27,13 +43,10 @@ export default function Command() {
           key={index}
           actions={
             <ActionPanel>
-              <Action.Paste
+              <Action
                 title={'Get code for "' + item.name + '"'}
-                content={getCode(index)}
-                onPaste={() => {
-                  closeMainWindow();
-                  popToRoot();
-                }}
+                icon={Icon.Clipboard}
+                onAction={() => pasteCode(item)}
               />
             </ActionPanel>
           }

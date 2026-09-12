@@ -1,10 +1,10 @@
 import fs from "fs";
 import { homedir } from "os";
-import totp from "totp-generator";
+import { TOTP } from "totp-generator";
 
 type Item = { name: string; secret: string };
 
-const configFile = homedir + "/.gauth";
+const configFile = homedir() + "/.gauth";
 
 const getItems = (): Item[] => {
   const items = [];
@@ -13,7 +13,7 @@ const getItems = (): Item[] => {
   const regexp = /\[(.*)]\nsecret=(.*)/g;
 
   for (const match of data.matchAll(regexp)) {
-    const [full, name, secret] = match;
+    const [, name, secret] = match;
     items.push({
       name,
       secret,
@@ -22,9 +22,9 @@ const getItems = (): Item[] => {
   return items;
 };
 
-const getCode = (itemId: number) => {
-  const items = getItems();
-  return totp(items[itemId].secret);
+const getCode = async (secret: string): Promise<string> => {
+  const { otp } = await TOTP.generate(secret);
+  return otp;
 };
 
 export { getItems, getCode };
