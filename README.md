@@ -14,7 +14,7 @@ To use this extension, follow these steps:
     ```
    echo '[Example]' | sops encrypt --age <public key> --input-type binary --output-type binary /dev/stdin > ~/.gauth
    ```
-1. Open the extension in Raycast and choose "Edit in Sublime Text" (⌘E). Add your profiles using this example as a guide:
+1. Open the extension in Raycast and select "Edit" at the bottom of the list. Add your profiles using this example as a guide:
     ```
    [GitHub]
    secret=QPFTXRRX5NKTJSUO

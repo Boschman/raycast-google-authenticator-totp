@@ -1,15 +1,4 @@
-import {
-  Action,
-  ActionPanel,
-  Clipboard,
-  closeMainWindow,
-  Icon,
-  Keyboard,
-  List,
-  popToRoot,
-  showToast,
-  Toast,
-} from "@raycast/api";
+import { Action, ActionPanel, Clipboard, closeMainWindow, Icon, List, popToRoot, showToast, Toast } from "@raycast/api";
 import { usePromise } from "@raycast/utils";
 import { getItems, editItems, getCode, Item } from "./totp";
 
@@ -38,15 +27,6 @@ const openEditor = async () => {
   await closeWindow();
 };
 
-const editAction = (
-  <Action
-    title="Edit in Sublime Text"
-    icon={Icon.Pencil}
-    shortcut={Keyboard.Shortcut.Common.Edit}
-    onAction={openEditor}
-  />
-);
-
 export default function Command() {
   const { data: items, isLoading } = usePromise(getItems, [], {
     failureToastOptions: { title: "Error getting items" },
@@ -54,7 +34,6 @@ export default function Command() {
 
   return (
     <List isLoading={isLoading} searchBarPlaceholder="Paste One-Time Password">
-      <List.EmptyView title="No profiles found" actions={<ActionPanel>{editAction}</ActionPanel>} />
       {items?.map((item, index) => (
         <List.Item
           icon="2fa-icon.png"
@@ -67,11 +46,22 @@ export default function Command() {
                 icon={Icon.Clipboard}
                 onAction={() => pasteCode(item)}
               />
-              {editAction}
             </ActionPanel>
           }
         />
       ))}
+      <List.Section>
+        <List.Item
+          icon={Icon.Pencil}
+          title="Edit"
+          subtitle="Open ~/.gauth in Sublime Text"
+          actions={
+            <ActionPanel>
+              <Action title="Edit in Sublime Text" icon={Icon.Pencil} onAction={openEditor} />
+            </ActionPanel>
+          }
+        />
+      </List.Section>
     </List>
   );
 }

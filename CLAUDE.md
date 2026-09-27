@@ -42,8 +42,8 @@ targets reinstall automatically when dependencies change.
     it can re-encrypt after the tab closes even if Raycast unloads the command.
   - `getCode(secret)` is **async** and returns the 6-digit code.
 - **`src/index.tsx`** - loads the profiles with `usePromise` and renders them as a `<List>`.
-  Selecting one generates a code and pastes it via `Clipboard.paste`, then closes the window. The
-  "Edit in Sublime Text" action (⌘E) is also available from the empty view.
+  Selecting one generates a code and pastes it via `Clipboard.paste`, then closes the window. An
+  "Edit" item in its own section at the bottom calls `editItems()`.
 
 Codes are generated on demand in the action handler, not at render time, because they expire
 every 30 seconds.
