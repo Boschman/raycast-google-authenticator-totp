@@ -1,26 +1,28 @@
-import { Action, ActionPanel, Clipboard, closeMainWindow, Icon, List, popToRoot, showToast, Toast } from "@raycast/api";
-import { getItems, getCode, Item } from "./totp";
+import {
+  Action,
+  ActionPanel,
+  Clipboard,
+  closeMainWindow,
+  Icon,
+  Keyboard,
+  List,
+  popToRoot,
+  showToast,
+  Toast,
+} from "@raycast/api";
+import { usePromise } from "@raycast/utils";
+import { getItems, editItems, getCode, Item } from "./totp";
 
-const getAllItems = () => {
-  try {
-    return getItems();
-  } catch (e: unknown) {
-    const err = e as Error;
-    showToast({
-      style: Toast.Style.Failure,
-      title: "Error getting items",
-      message: err.message,
-    });
-    return [];
-  }
+const closeWindow = async () => {
+  await closeMainWindow();
+  await popToRoot();
 };
 
 // Codes expire, so generate on demand rather than at render time
 const pasteCode = async (item: Item) => {
   try {
     await Clipboard.paste(await getCode(item.secret));
-    await closeMainWindow();
-    await popToRoot();
+    await closeWindow();
   } catch (e: unknown) {
     const err = e as Error;
     await showToast({
@@ -31,11 +33,28 @@ const pasteCode = async (item: Item) => {
   }
 };
 
+const openEditor = async () => {
+  editItems();
+  await closeWindow();
+};
+
+const editAction = (
+  <Action
+    title="Edit in Sublime Text"
+    icon={Icon.Pencil}
+    shortcut={Keyboard.Shortcut.Common.Edit}
+    onAction={openEditor}
+  />
+);
+
 export default function Command() {
-  const items: Item[] = getAllItems();
+  const { data: items, isLoading } = usePromise(getItems, [], {
+    failureToastOptions: { title: "Error getting items" },
+  });
 
   return (
-    <List searchBarPlaceholder="Paste One-Time Password">
+    <List isLoading={isLoading} searchBarPlaceholder="Paste One-Time Password">
+      <List.EmptyView title="No profiles found" actions={<ActionPanel>{editAction}</ActionPanel>} />
       {items?.map((item, index) => (
         <List.Item
           icon="2fa-icon.png"
@@ -48,6 +67,7 @@ export default function Command() {
                 icon={Icon.Clipboard}
                 onAction={() => pasteCode(item)}
               />
+              {editAction}
             </ActionPanel>
           }
         />

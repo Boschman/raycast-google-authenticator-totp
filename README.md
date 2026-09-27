@@ -4,9 +4,17 @@ This extension allows you to easily generate two-factor authentication codes (2f
 
 ### Usage
 To use this extension, follow these steps:
-1. Install the extension.
-1. Create a configuration text file in your home directory: `~/.gauth`.
-1. Add your profiles to the configuration file using this example as a guide:
+1. Install the extension, [sops](https://github.com/getsops/sops), [age](https://github.com/FiloSottile/age) and [Sublime Text](https://www.sublimetext.com/): `brew install sops age && brew install --cask sublime-text`.
+1. Generate an age key and store it in the macOS Keychain, then print its public key:
+    ```
+   printf 'add-generic-password -s google-authenticator-totp -a age-key -w %s\n' "$(age-keygen 2>/dev/null | grep '^AGE-SECRET-KEY-')" | security -i
+   security find-generic-password -s google-authenticator-totp -a age-key -w | age-keygen -y
+   ```
+1. Create an encrypted configuration file in your home directory, using the public key from the previous step:
+    ```
+   echo '[Example]' | sops encrypt --age <public key> --input-type binary --output-type binary /dev/stdin > ~/.gauth
+   ```
+1. Open the extension in Raycast and choose "Edit in Sublime Text" (⌘E). Add your profiles using this example as a guide:
     ```
    [GitHub]
    secret=QPFTXRRX5NKTJSUO
@@ -16,11 +24,15 @@ To use this extension, follow these steps:
    ```
    
    Replace the value after `secret=` with the secret code provided to you.
+   
+   Save and close the tab to encrypt the file again.
 1. Open the extension in Raycast to see the list of your profiles.
 1. Select the profile you want to use.
 1. The time-based 2fa code will be generated and pasted into your active window.
 
-**Beware that `~/.gauth` contains your secrets, so make sure unauthorized people and systems can't access it.**
+`~/.gauth` is encrypted with [sops](https://github.com/getsops/sops), and the key is stored in the Keychain. To edit it from a terminal, set `SOPS_AGE_KEY_CMD="security find-generic-password -s google-authenticator-totp -a age-key -w"` and run `sops ~/.gauth`.
+
+**Back up the age key somewhere safe, such as a password manager. Without it, your secrets can't be decrypted.**
 
 ### License
 This extension is licensed under the [MIT License](https://opensource.org/license/mit/).\

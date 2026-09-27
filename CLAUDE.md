@@ -5,7 +5,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project Overview
 
 Raycast extension that lists TOTP profiles from `~/.gauth` and pastes a two-factor code for the
-selected one. macOS only, and it reads secrets from that file in plain text.
+selected one. macOS only. `~/.gauth` is encrypted with sops (binary format) using an age key stored
+in the Keychain (service `google-authenticator-totp`, account `age-key`).
 
 ## Build
 
@@ -31,13 +32,18 @@ targets reinstall automatically when dependencies change.
 
 ## Architecture
 
-- **`src/totp.ts`** - reads and parses `~/.gauth`, and generates codes.
-  - `getItems()` parses the ini-like file with the regex `/\[(.*)]\nsecret=(.*)/g` into
-    `{ name, secret }` entries. Note this requires a literal `\n` between the header and the
-    secret, so a `\r\n` file will not parse.
+- **`src/totp.ts`** - decrypts and parses `~/.gauth`, opens it for editing, and generates codes.
+  - `sopsEnv` adds Homebrew to `PATH` (Raycast's `PATH` lacks it) and sets `SOPS_AGE_KEY_CMD` to
+    read the age key from the Keychain.
+  - `getItems()` is **async**: it runs `sops decrypt` and parses the ini-like output with the regex
+    `/\[(.*)]\nsecret=(.*)/g` into `{ name, secret }` entries. Note this requires a literal `\n`
+    between the header and the secret, so a `\r\n` file will not parse.
+  - `editItems()` runs `sops edit` with Sublime Text (`subl --wait`) as `SOPS_EDITOR`, detached so
+    it can re-encrypt after the tab closes even if Raycast unloads the command.
   - `getCode(secret)` is **async** and returns the 6-digit code.
-- **`src/index.tsx`** - renders the profiles as a `<List>`. Selecting one generates a code and
-  pastes it via `Clipboard.paste`, then closes the window.
+- **`src/index.tsx`** - loads the profiles with `usePromise` and renders them as a `<List>`.
+  Selecting one generates a code and pastes it via `Clipboard.paste`, then closes the window. The
+  "Edit in Sublime Text" action (⌘E) is also available from the empty view.
 
 Codes are generated on demand in the action handler, not at render time, because they expire
 every 30 seconds.
